@@ -72,9 +72,25 @@ else:
     st.error("Please select a valid start and end date.")
     st.stop()
 
+from google.oauth2 import service_account
+
+# ... (existing imports)
+
 # BigQuery Client Setup
 @st.cache_resource
 def get_bigquery_client():
+    # Check if running in Streamlit Cloud with secrets
+    if "gcp_service_account" in st.secrets:
+        try:
+            creds = service_account.Credentials.from_service_account_info(
+                st.secrets["gcp_service_account"]
+            )
+            return bigquery.Client(credentials=creds, project="analytics-473719")
+        except Exception as e:
+            st.error(f"Error initializing client from secrets: {e}")
+            return None
+    
+    # Fallback to local environment (Application Default Credentials)
     return bigquery.Client(project="analytics-473719")
 
 client = get_bigquery_client()
