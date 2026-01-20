@@ -1,0 +1,8 @@
+google-cloud-bigquery
+pandas
+matplotlib
+seaborn
+ipykernel
+db-dtypes
+streamlit
+plotly
