@@ -211,9 +211,10 @@ st.divider()
 st.header("3. Google Search Console Analysis")
 st.write("Analysis of organic Google Search performance from local export data.")
 
-# Paths to local data (Hardcoded as per requirement)
-PATH_DIRECT = "/Users/maxhidalgo/Downloads/Pulex-Bucket-Direct"
-PATH_COLLECTION = "/Users/maxhidalgo/Downloads/Bucket-Collection"
+# Paths to local data (Relatively referenced for deployment)
+# Using generic paths that work in both local (if cwd is correct) and cloud environments
+PATH_DIRECT = os.path.join(os.path.dirname(__file__), "Pulex-Bucket-Direct")
+PATH_COLLECTION = os.path.join(os.path.dirname(__file__), "Bucket-Collection")
 
 @st.cache_data(ttl=3600)
 def load_gsc_data(directory_path, label):
