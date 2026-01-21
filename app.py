@@ -151,7 +151,7 @@ st.divider()
 
 # --- Section 2: Product Views ---
 st.header("2. Product View Analysis")
-st.write(f"Views of specific \"Pulex Bucket\" colors aggregated by **{granularity}**.")
+st.write(f"Tracking when users **click** to view specific \"Pulex Bucket\" product pages. Unlike search volume, this represents direct interest in a specific item.")
 
 @st.cache_data(ttl=3600)
 def load_product_data(start, end, time_trunc):
