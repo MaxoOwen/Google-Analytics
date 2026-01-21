@@ -16,9 +16,9 @@ st.title("🪣 Pulex Bucket: Search & Product Analysis")
 st.markdown("""
 This interactive report analyzes search volume and product views for "Pulex Bucket" items.
 
-### Data Source
-*   **BigQuery Project:** `analytics-473719`
-*   **Dataset:** `analytics_306941895`
+### Data Sources
+*   **BigQuery Project:** `analytics-473719` (Internal Site Search & Product Views)
+*   **Google Search Console:** Local export data (`Direct` and `Collection` sources)
 """)
 
 # Methodology Section
@@ -27,15 +27,17 @@ col1, col2 = st.columns(2)
 with col1:
     st.info("""
     **What this data IS:**
-    *   **Internal Site Search Volume:** Count of searches containing "pulex bucket".
-    *   **Specific Product Views:** Page views for items with "pulex bucket" in the name, filtered by color (Red, Blue, Green, Gray).
+    *   **Internal Site Search:** Count of searches on THIS site containing "pulex bucket".
+    *   **Product Views:** User interest in specific "Pulex Bucket" items (Red, Blue, Green, Gray).
+    *   **Organic Search (GSC):** External Google Search performance (Clicks, Impressions, Queries).
     """)
 
 with col2:
     st.warning("""
     **What this data IS NOT:**
-    *   **Not a Sales Report:** Tracks interest (searches/views), not purchases.
-    *   **Not Comprehensive:** Limited to "Pulex Bucket" items.
+    *   **Not a Sales Report:** Tracks intent and discovery, not final purchases.
+    *   **Not Real-Time:** GSC data relies on static exports. BigQuery data depends on sync latency.
+    *   **Not All Traffic:** Excludes other organic/paid channels not captured in these specific datasets.
     """)
 
 st.divider()
