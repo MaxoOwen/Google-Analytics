@@ -6,3 +6,4 @@ ipykernel
 db-dtypes
 streamlit
 plotly
+nbformat

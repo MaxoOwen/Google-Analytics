@@ -2,6 +2,7 @@ import streamlit as st
 from google.cloud import bigquery
 import pandas as pd
 import plotly.express as px
+import os
 
 # Page Configuration
 st.set_page_config(
@@ -204,3 +205,134 @@ with st.spinner('Loading product view data...'):
 
     except Exception as e:
         st.error(f"Error loading product data: {e}")
+
+# --- Section 3: Google Search Console (GSC) Data ---
+st.divider()
+st.header("3. Google Search Console Analysis")
+st.write("Analysis of organic Google Search performance from local export data.")
+
+# Paths to local data (Hardcoded as per requirement)
+PATH_DIRECT = "/Users/maxhidalgo/Downloads/Pulex-Bucket-Direct"
+PATH_COLLECTION = "/Users/maxhidalgo/Downloads/Bucket-Collection"
+
+@st.cache_data(ttl=3600)
+def load_gsc_data(directory_path, label):
+    data = {}
+    
+    def safe_load(filename):
+        path = os.path.join(directory_path, filename)
+        if os.path.exists(path):
+            try:
+                df = pd.read_csv(path, encoding='utf-8-sig')
+            except Exception:
+                # Fallback to latin1 if utf-8 fails
+                df = pd.read_csv(path, encoding='latin1')
+            df.columns = df.columns.str.strip()
+            df['Source'] = label
+            return df
+        return None
+
+    # Load Chart.csv
+    df_chart = safe_load('Chart.csv')
+    if df_chart is not None:
+        if 'Date' in df_chart.columns:
+            df_chart['Date'] = pd.to_datetime(df_chart['Date'])
+        data['chart'] = df_chart
+        
+    # Load Queries and Pages
+    data['queries'] = safe_load('Queries.csv')
+    data['pages'] = safe_load('Pages.csv')
+        
+    return data
+
+if os.path.exists(PATH_DIRECT) and os.path.exists(PATH_COLLECTION):
+    with st.spinner('Loading GSC data...'):
+        # Load Data
+        data_direct = load_gsc_data(PATH_DIRECT, "Direct")
+        data_collection = load_gsc_data(PATH_COLLECTION, "Collection")
+        
+        # Combine Chart Data
+        df_chart_all = pd.DataFrame()
+        if data_direct.get('chart') is not None and data_collection.get('chart') is not None:
+            df_chart_all = pd.concat([data_direct['chart'], data_collection['chart']], ignore_index=True)
+            
+        # Combine Queries Data
+        df_queries_all = pd.DataFrame()
+        if data_direct.get('queries') is not None and data_collection.get('queries') is not None:
+            df_queries_all = pd.concat([data_direct['queries'], data_collection['queries']], ignore_index=True)
+
+        # Combine Pages Data
+        df_pages_all = pd.DataFrame()
+        if data_direct.get('pages') is not None and data_collection.get('pages') is not None:
+            df_pages_all = pd.concat([data_direct['pages'], data_collection['pages']], ignore_index=True)
+
+        # Visualizations
+        if not df_chart_all.empty:
+            # Clicks Trend
+            fig_gsc_clicks = px.line(
+                df_chart_all, x='Date', y='Clicks', color='Source', 
+                title='GSC Clicks Trend', markers=True
+            )
+            fig_gsc_clicks.update_layout(hovermode="x unified")
+            st.plotly_chart(fig_gsc_clicks, use_container_width=True)
+            
+            # Impressions Trend
+            fig_gsc_imps = px.line(
+                df_chart_all, x='Date', y='Impressions', color='Source', 
+                title='GSC Impressions Trend', markers=True
+            )
+            fig_gsc_imps.update_layout(hovermode="x unified")
+            st.plotly_chart(fig_gsc_imps, use_container_width=True)
+
+        # Top Queries Table
+        if not df_queries_all.empty:
+            st.subheader("Top Queries (by Clicks)")
+            col_q1, col_q2 = st.columns(2)
+            
+            with col_q1:
+                st.caption("Source: Direct")
+                st.dataframe(
+                    df_queries_all[df_queries_all['Source'] == 'Direct']
+                    .sort_values(by='Clicks', ascending=False)
+                    .head(10)[['Top queries', 'Clicks', 'Impressions', 'CTR', 'Position']],
+                    use_container_width=True,
+                    hide_index=True
+                )
+                
+            with col_q2:
+                st.caption("Source: Collection")
+                st.dataframe(
+                    df_queries_all[df_queries_all['Source'] == 'Collection']
+                    .sort_values(by='Clicks', ascending=False)
+                    .head(10)[['Top queries', 'Clicks', 'Impressions', 'CTR', 'Position']],
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+        # Top Pages Table
+        if not df_pages_all.empty:
+            st.subheader("Top Landing Pages (by Clicks)")
+            col_p1, col_p2 = st.columns(2)
+            
+            with col_p1:
+                st.caption("Source: Direct")
+                st.dataframe(
+                    df_pages_all[df_pages_all['Source'] == 'Direct']
+                    .sort_values(by='Clicks', ascending=False)
+                    .head(10)[['Top pages', 'Clicks', 'Impressions', 'CTR', 'Position']],
+                    use_container_width=True,
+                    hide_index=True
+                )
+                
+            with col_p2:
+                st.caption("Source: Collection")
+                st.dataframe(
+                    df_pages_all[df_pages_all['Source'] == 'Collection']
+                    .sort_values(by='Clicks', ascending=False)
+                    .head(10)[['Top pages', 'Clicks', 'Impressions', 'CTR', 'Position']],
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+else:
+    st.warning(f"GSC Data directories not found. Expected at: `{PATH_DIRECT}` and `{PATH_COLLECTION}`")
